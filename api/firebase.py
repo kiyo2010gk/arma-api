@@ -1,14 +1,21 @@
-import firebase_admin
-from firebase_admin import credentials, auth, firestore
+import json
 import os
+import firebase_admin
+from firebase_admin import credentials, firestore, auth
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-KEY_PATH = os.path.join(BASE_DIR, "firebase-key.json")
+# Load Firebase key from Railway environment variable
+raw = os.environ.get("FIREBASE_KEY_JSON")
 
-cred = credentials.Certificate(KEY_PATH)
-firebase_admin.initialize_app(cred)
+if not raw:
+    raise RuntimeError("FIREBASE_KEY_JSON environment variable is missing")
+
+cred = credentials.Certificate(json.loads(raw))
+
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred)
 
 db = firestore.client()
+
 
 def verify_token(id_token: str):
     return auth.verify_id_token(id_token)
